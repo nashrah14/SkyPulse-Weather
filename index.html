@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyPulse - Weather App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/feather-icons"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: #e6f0ff;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1a237e;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+    }
+
+    .search-box {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .search-box input {
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 2px solid #121a6d;
+      font-size: 1rem;
+      width: 300px;
+    }
+
+    .search-box button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .weather-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .weather-main h2 {
+      font-size: 1.5rem;
+    }
+
+    .weather-main .temp {
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+    }
+
+    .info-item i {
+      color: #1a73e8;
+    }
+
+    .air-quality {
+      color: #e64b1c;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SkyPulse</h1>
+    <div class="search-box">
+      <input type="text" id="locationInput" placeholder="Enter location..." />
+      <button onclick="getWeather()">Search</button>
+    </div>
+    <div id="weatherContainer"></div>
+  </div>
+
+  <script>
+    async function getWeather() {
+      const location = document.getElementById('locationInput').value;
+      const container = document.getElementById('weatherContainer');
+      container.innerHTML = '';
+
+      if (!location) {
+        container.innerHTML = '<div class="card">Please enter a location.</div>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=c9590ca3c3144f7289a151445251704&q=${encodeURIComponent(location)}&aqi=yes`);
+        const data = await res.json();
+
+        if (data.error) {
+          container.innerHTML = `<div class="card">${data.error.message}</div>`;
+          return;
+        }
+
+        const weatherHTML = `
+          <div class="card">
+            <div class="weather-main">
+              <div>
+                <h2>${data.location.name}, ${data.location.country}</h2>
+                <p>${new Date(data.location.localtime).toLocaleString()}</p>
+              </div>
+              <div class="temp">
+                <img src="https:${data.current.condition.icon}" alt="Weather icon">
+                <div>
+                  ${data.current.temp_c}&deg;C<br />
+                  ${data.current.condition.text}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="card">
+              <h3>Weather Details</h3>
+              <div class="info-item"><i data-feather="droplet"></i> Humidity: ${data.current.humidity}%</div>
+              <div class="info-item"><i data-feather="wind"></i> Wind: ${data.current.wind_kph} km/h ${data.current.wind_dir}</div>
+              <div class="info-item"><i data-feather="thermometer"></i> Feels Like: ${data.current.feelslike_c}&deg;C</div>
+              <div class="info-item"><i data-feather="sun"></i> UV Index: ${data.current.uv}</div>
+            </div>
+
+            <div class="card">
+              <h3>Air Quality</h3>
+              <div class="air-quality">
+                AQI (US): ${data.current.air_quality["us-epa-index"]} - ${getAQIDescription(data.current.air_quality["us-epa-index"])}
+              </div>
+              <div class="info-item">PM2.5: ${data.current.air_quality.pm2_5.toFixed(1)} µg/m³</div>
+              <div class="info-item">PM10: ${data.current.air_quality.pm10.toFixed(1)} µg/m³</div>
+              <div class="info-item">O3: ${data.current.air_quality.o3.toFixed(1)} µg/m³</div>
+              <div class="info-item">NO2: ${data.current.air_quality.no2.toFixed(1)} µg/m³</div>
+            </div>
+          </div>
+        `;
+
+        container.innerHTML = weatherHTML;
+        feather.replace();
+      } catch (error) {
+        console.error(error);
+        container.innerHTML = '<div class="card">Unable to fetch data. Please try again later.</div>';
+      }
+    }
+
+    function getAQIDescription(index) {
+      const descriptions = {
+        1: "Good",
+        2: "Moderate",
+        3: "Unhealthy for Sensitive Groups",
+        4: "Unhealthy",
+        5: "Very Unhealthy",
+        6: "Hazardous"
+      };
+      return descriptions[index] || "Unknown";
+    }
+  </script>
+</body>
+</html>
