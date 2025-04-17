@@ -1,5 +1,6 @@
 # SkyPulse-Weather
-🌤️ SkyPulse — A Real-time Weather Web Experience
+🌤️ SkyPulse — A Real-time Weather Web Experience.
+
 SkyPulse is a modern, responsive weather website that lets you instantly check the weather and air quality of any city around the world.
 Built with HTML, CSS, and JavaScript, SkyPulse connects to the live WeatherAPI to give users a clean and engaging snapshot of the current conditions.
 
